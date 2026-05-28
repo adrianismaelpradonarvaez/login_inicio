@@ -3,8 +3,8 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\Usuario;
 use Illuminate\Support\Facades\Hash;
+use App\Models\Usuario;
 
 class LoginController extends Controller
 {
@@ -12,34 +12,34 @@ class LoginController extends Controller
     {
         return view('login');
     }
-
+    
     public function login(Request $request)
     {
         $request->validate([
-            'usuario' => 'required',
+            'username' => 'required',
             'password' => 'required'
         ]);
-
-        $usuario = Usuario::where('usuario', $request->usuario)->first();
-
+        
+        $usuario = Usuario::where('username', $request->username)->first();
+        
         if ($usuario && Hash::check($request->password, $usuario->password)) {
             session([
                 'id' => $usuario->id,
                 'nombre' => $usuario->nombre,
-                'usuario' => $usuario->usuario,
+                'username' => $usuario->username,
                 'rol' => $usuario->rol
             ]);
-
+            
             if ($usuario->rol == 'Administrador') {
                 return redirect()->route('admin.index');
             } else {
                 return redirect()->route('usuario.index');
             }
         }
-
+        
         return back()->with('error', 'Usuario o contraseña incorrectos');
     }
-
+    
     public function logout()
     {
         session()->flush();
