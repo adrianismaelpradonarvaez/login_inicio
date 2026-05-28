@@ -1,14 +1,25 @@
-FROM php:8.3-fpm-alpine
-
-RUN apk add --no-cache curl git bash
-RUN docker-php-ext-install pdo pdo_mysql
-COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+FROM php:8.3-cli
 
 WORKDIR /var/www
 
-COPY . .
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        git \
+        unzip \
+        libpq-dev \
+        libzip-dev \
+        npm \
+    && docker-php-ext-install pdo_pgsql pgsql zip \
+    && rm -rf /var/lib/apt/lists/*
 
-RUN composer install --no-dev --optimize-autoloader
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
-EXPOSE 8000
-CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8000"]
+COPY . /var/www
+
+RUN composer install --no-dev --optimize-autoloader \
+    && npm install \
+    && npm run build
+
+EXPOSE 10000
+
+CMD ["sh", "/var/www/start.sh"]
